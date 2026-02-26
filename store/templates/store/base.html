@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-Commerce</title>
+</head>
+<body>
+    <h1>HAHAHA</h1>
+
+    <a href="/">Home</a> |
+    <a href="/cart/">Cart</a> |
+    <a href="/orders/">Orders</a> |
+
+    {% if user.is_authenticated %}
+        Hello, {{ user.username }} |
+       <form action="{% url 'logout' %}" method="POST" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
+    {% else %}
+        <a href="/login/">Login</a> |
+        <a href="/register/">Register</a>
+    {% endif %}
+
+    <hr>
+
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

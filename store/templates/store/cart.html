@@ -1,0 +1,28 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% extends "store/base.html" %}
+{% block content %}
+
+<h2>Your Cart</h2>
+
+{% for item in items %}
+    <p>
+        {{ item.product.name }} |
+        Quantity: {{ item.quantity }} |
+        ${{ item.product.price }}
+        <a href="{% url 'remove' item.id %}">Remove</a>
+    </p>
+{% endfor %}
+
+<h3>Total: ${{ total }}</h3>
+
+<a href="{% url 'checkout' %}">Checkout</a>
+
+{% endblock %}
+</body>
+</html>

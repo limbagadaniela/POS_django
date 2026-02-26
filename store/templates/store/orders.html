@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% extends "store/base.html" %}
+{% block content %}
+
+<h2>Your Orders</h2>
+
+{% for order in orders %}
+    <p>
+        Total: ${{ order.total_price }} |
+        Date: {{ order.created_at }}
+    </p>
+{% endfor %}
+
+{% endblock %}
+</body>
+</html>
