@@ -43,7 +43,7 @@ def cart_view(request):
 @login_required
 @require_POST
 def remove_from_cart(request, pk):
-    item = get_object_or_404(Cart, pk=pk, user=request.user)
+    item = get_object_or_404(Cart, pk=pk) # user=request.user
     item.delete()
     return redirect('cart')
 
