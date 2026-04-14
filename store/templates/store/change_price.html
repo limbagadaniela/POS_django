@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Price</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --brand: #667eea; --brand-dark: #764ba2; --surface: #fff; --bg: #f4f5fb; --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280; --orange: #f59e0b; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+        header { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #fff; padding: .9rem 1.75rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(102,126,234,.3); }
+        header h1 { font-size: 1.25rem; font-weight: 700; }
+        .btn { display: inline-block; padding: .5rem .95rem; background: rgba(255,255,255,.18); color: #fff; text-decoration: none; border-radius: 8px; border: 1px solid rgba(255,255,255,.4); cursor: pointer; font-size: .85rem; font-family: inherit; transition: background .2s; }
+        .btn:hover { background: rgba(255,255,255,.28); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        .card { background: var(--surface); border-radius: 14px; padding: 1.4rem; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow-x: auto; }
+        .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 2px solid var(--orange); padding-bottom: .5rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: .8rem 1rem; text-align: left; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--border); background: var(--bg); }
+        td { padding: .8rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: middle; }
+        tbody tr:hover { background: #f7f8fc; }
+        .price-input { width: 100px; padding: .4rem .6rem; border: 2px solid var(--border); border-radius: 8px; font-size: .9rem; font-family: 'DM Mono', monospace; }
+        .price-input:focus { outline: none; border-color: var(--orange); }
+        .save-btn { padding: .4rem .9rem; background: var(--orange); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: .82rem; font-weight: 600; font-family: inherit; transition: opacity .2s; }
+        .save-btn:hover { opacity: .85; }
+        .messages { margin-bottom: 1rem; }
+        .msg { padding: .75rem 1rem; border-radius: 10px; margin-bottom: .5rem; font-size: .9rem; font-weight: 500; }
+        .msg-success { background: #dcfce7; color: #15803d; }
+        .msg-error { background: #fee2e2; color: #dc2626; }
+        .mono { font-family: 'DM Mono', monospace; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>💲 Change Price</h1>
+        <a href="{% url 'admin_dashboard' %}" class="btn">← Dashboard</a>
+    </header>
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for msg in messages %}
+                    <div class="msg {% if 'updated' in msg.message %}msg-success{% else %}msg-error{% endif %}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="card">
+            <h2 class="section-title">Update Product Prices</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Current Price</th>
+                        <th>New Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>{{ product.category.name }}</td>
+                            <td class="mono">P{{ product.price }}</td>
+                            <td>
+                                <form method="POST" style="margin:0;display:flex;gap:.5rem;align-items:center">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <input type="number" name="price" class="price-input" step="0.01" min="0.01" placeholder="{{ product.price }}" required>
+                                    <button type="submit" class="save-btn">Save</button>
+                                </form>
+                            </td>
+                            <td></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No products found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

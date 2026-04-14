@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Management</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --brand: #667eea; --brand-dark: #764ba2; --surface: #fff; --bg: #f4f5fb; --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280; --green: #22c55e; --red: #ef4444; --orange: #f59e0b; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+        header { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #fff; padding: .9rem 1.75rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(102,126,234,.3); }
+        header h1 { font-size: 1.25rem; font-weight: 700; }
+        .btn { display: inline-block; padding: .5rem .95rem; background: rgba(255,255,255,.18); color: #fff; text-decoration: none; border-radius: 8px; border: 1px solid rgba(255,255,255,.4); cursor: pointer; font-size: .85rem; font-family: inherit; transition: background .2s; }
+        .btn:hover { background: rgba(255,255,255,.28); }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        /* Tally cards */
+        .tally-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .tally-card {
+            background: var(--surface); border-radius: 14px; padding: 1.2rem 1.4rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,.07); border-left: 5px solid var(--brand);
+            text-decoration: none; color: var(--text); transition: transform .2s, box-shadow .2s;
+        }
+        .tally-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+        .tally-card.active-filter { outline: 3px solid var(--brand); }
+        .tally-card h3 { font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .35rem; }
+        .tally-value { font-size: 1.75rem; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--brand); }
+
+        /* Filter tabs */
+        .filter-tabs { display: flex; gap: .5rem; margin-bottom: 1.25rem; }
+        .tab {
+            padding: .5rem 1.1rem; border-radius: 8px; font-size: .85rem; font-weight: 600;
+            text-decoration: none; color: var(--muted); background: var(--surface);
+            border: 2px solid var(--border); transition: all .2s;
+        }
+        .tab:hover { border-color: var(--brand); color: var(--brand); }
+        .tab.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+        /* Messages */
+        .messages { margin-bottom: 1rem; }
+        .msg { padding: .75rem 1rem; border-radius: 10px; margin-bottom: .5rem; font-size: .9rem; font-weight: 500; }
+        .msg-success { background: #dcfce7; color: #15803d; }
+        .msg-error   { background: #fee2e2; color: #dc2626; }
+
+        /* Table */
+        .card { background: var(--surface); border-radius: 14px; padding: 1.4rem; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow-x: auto; }
+        .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 2px solid var(--brand); padding-bottom: .5rem; display: flex; justify-content: space-between; align-items: center; }
+        .result-count { font-size: .82rem; font-weight: 500; color: var(--muted); }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: .8rem 1rem; text-align: left; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--border); background: var(--bg); }
+        td { padding: .8rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: middle; }
+        tbody tr:hover { background: #f7f8fc; }
+        .badge { display: inline-block; padding: .25rem .65rem; border-radius: 20px; font-size: .78rem; font-weight: 700; }
+        .badge-available { background: #dcfce7; color: #15803d; }
+        .badge-oos       { background: #fee2e2; color: #dc2626; }
+        .stock-input { width: 80px; padding: .4rem .6rem; border: 2px solid var(--border); border-radius: 8px; font-size: .9rem; font-family: 'DM Mono', monospace; }
+        .stock-input:focus { outline: none; border-color: var(--brand); }
+        .action-btn { padding: .4rem .85rem; border: none; border-radius: 8px; cursor: pointer; font-size: .82rem; font-weight: 600; font-family: inherit; color: #fff; transition: opacity .2s; white-space: nowrap; }
+        .action-btn:hover { opacity: .85; }
+        .btn-green { background: var(--green); }
+        .btn-red   { background: var(--red); }
+        .btn-brand { background: var(--brand); }
+        .row-actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+        .mono { font-family: 'DM Mono', monospace; }
+        .empty-state { text-align: center; padding: 2.5rem; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📦 Stock Management</h1>
+        <a href="{% url 'admin_dashboard' %}" class="btn">← Dashboard</a>
+    </header>
+    <div class="container">
+
+        <!-- Tally cards -->
+        <div class="tally-grid">
+            <a href="?filter=all" class="tally-card {% if filter_by == 'all' %}active-filter{% endif %}">
+                <h3>All Products</h3>
+                <div class="tally-value">{{ total_count }}</div>
+            </a>
+            <a href="?filter=available" class="tally-card {% if filter_by == 'available' %}active-filter{% endif %}" style="border-left-color:var(--green)">
+                <h3>Available</h3>
+                <div class="tally-value" style="color:var(--green)">{{ available_count }}</div>
+            </a>
+            <a href="?filter=oos" class="tally-card {% if filter_by == 'oos' %}active-filter{% endif %}" style="border-left-color:var(--red)">
+                <h3>Out of Stock</h3>
+                <div class="tally-value" style="color:var(--red)">{{ oos_count }}</div>
+            </a>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="filter-tabs">
+            <a href="?filter=all" class="tab {% if filter_by == 'all' %}active{% endif %}">All</a>
+            <a href="?filter=available" class="tab {% if filter_by == 'available' %}active{% endif %}">✅ Available</a>
+            <a href="?filter=oos" class="tab {% if filter_by == 'oos' %}active{% endif %}">❌ Out of Stock</a>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for msg in messages %}
+                    <div class="msg {% if 'error' in msg.tags %}msg-error{% else %}msg-success{% endif %}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="section-title">
+                <span>
+                    {% if filter_by == 'available' %}Available Products
+                    {% elif filter_by == 'oos' %}Out of Stock Products
+                    {% else %}All Products{% endif %}
+                </span>
+                <span class="result-count">{{ products|length }} result{{ products|length|pluralize }}</span>
+            </div>
+            {% if products %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>{{ product.category.name }}</td>
+                            <td class="mono">P{{ product.price }}</td>
+                            <td class="mono">{{ product.stock }}</td>
+                            <td>
+                                {% if product.is_available %}
+                                    <span class="badge badge-available">Available</span>
+                                {% else %}
+                                    <span class="badge badge-oos">Out of Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <form method="POST" style="margin:0">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                                        <input type="hidden" name="action" value="toggle_available">
+                                        {% if product.is_available %}
+                                            <button class="action-btn btn-red">Mark Out of Stock</button>
+                                        {% else %}
+                                            <button class="action-btn btn-green">Mark Available</button>
+                                        {% endif %}
+                                    </form>
+                                    <form method="POST" style="margin:0;display:flex;gap:.4rem;align-items:center">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                                        <input type="hidden" name="action" value="set_stock">
+                                        <input type="number" name="stock" class="stock-input" min="0" placeholder="{{ product.stock }}" required>
+                                        <button type="submit" class="action-btn btn-brand">Set Stock</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <div class="empty-state">
+                    <p style="font-size:1.75rem;margin-bottom:.5rem">🎉</p>
+                    <p style="font-weight:600">No products in this category</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

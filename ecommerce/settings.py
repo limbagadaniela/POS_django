@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'store',
 ]
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/admin-dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 MEDIA_URL = '/media/'
@@ -60,10 +60,11 @@ ROOT_URLCONF = 'ecommerce.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [],  # Leave empty to use app directories
+        'APP_DIRS': True,  # This must be True
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',

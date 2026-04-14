@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --brand: #667eea; --brand-dark: #764ba2;
+            --surface: #fff; --bg: #f4f5fb;
+            --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280;
+            --green: #22c55e; --red: #ef4444;
+            --TAX_RATE: 0.12;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+        header {
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff; padding: 1rem 2rem;
+            text-align: center; box-shadow: 0 2px 12px rgba(102,126,234,.3);
+        }
+        header h1 { font-size: 1.3rem; font-weight: 700; }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+
+        .checkout-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; }
+
+        .payment-section, .summary-card {
+            background: var(--surface); border-radius: 16px;
+            padding: 1.75rem; box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        }
+
+        .section-title {
+            font-size: 1.15rem; font-weight: 700; margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--brand); padding-bottom: .5rem;
+        }
+
+        .form-group { margin-bottom: 1.4rem; }
+        label { display: block; margin-bottom: .45rem; font-weight: 600; font-size: .9rem; }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%; padding: .75rem 1rem;
+            border: 2px solid var(--border); border-radius: 10px;
+            font-size: 1rem; font-family: inherit;
+            transition: border-color .2s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(102,126,234,.1); }
+
+        /* Prevent negative discount */
+        input[type="number"]#discount { }
+
+        .radio-group { display: flex; flex-direction: column; gap: .65rem; }
+        .radio-option {
+            display: flex; align-items: center; gap: .65rem;
+            padding: .85rem 1rem; border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: all .2s;
+            font-weight: 500;
+        }
+        .radio-option:hover { border-color: var(--brand); background: #f7f8fc; }
+        .radio-option input[type="radio"] { accent-color: var(--brand); width: auto; cursor: pointer; }
+
+        .amount-display {
+            font-size: 1.4rem; font-weight: 700; color: var(--brand);
+            text-align: center; padding: 1rem;
+            background: #f7f8fc; border-radius: 10px;
+            font-family: 'DM Mono', monospace;
+        }
+        .change-display {
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff; padding: 1rem; border-radius: 12px;
+            text-align: center; margin-top: 1rem;
+        }
+        .change-amount { font-size: 1.8rem; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: .35rem; }
+
+        .action-buttons { display: flex; flex-direction: column; gap: .75rem; margin-top: 1.75rem; }
+        .btn-submit {
+            padding: 1rem; border: none; border-radius: 10px;
+            background: var(--green); color: #fff;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: all .2s; font-family: inherit;
+        }
+        .btn-submit:hover { background: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,197,94,.3); }
+        .btn-back {
+            padding: 1rem; border: none; border-radius: 10px;
+            background: var(--bg); color: var(--text);
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+            text-decoration: none; text-align: center; display: block;
+            border: 2px solid var(--border); transition: all .2s; font-family: inherit;
+        }
+        .btn-back:hover { border-color: var(--brand); color: var(--brand); }
+
+        /* Summary card */
+        .summary-card { position: sticky; top: 2rem; }
+        .summary-title { font-size: 1rem; font-weight: 700; color: var(--brand); margin-bottom: 1rem; }
+        .receipt-info {
+            background: #f7f8fc; padding: .85rem 1rem;
+            border-radius: 10px; margin-bottom: 1rem; font-size: .85rem;
+        }
+        .receipt-number { font-weight: 700; color: var(--brand); word-break: break-word; margin-top: .2rem; }
+
+        .summary-row {
+            display: flex; justify-content: space-between;
+            padding: .65rem 0; border-bottom: 1px solid var(--border);
+            font-size: .9rem;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row.total {
+            font-size: 1.1rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff; padding: .85rem 1rem; border-radius: 10px;
+            margin-top: .75rem; border-bottom: none;
+        }
+        .mono { font-family: 'DM Mono', monospace; }
+
+        .error-text { color: var(--red); font-size: .8rem; margin-top: .35rem; display: none; }
+
+        @media (max-width: 768px) {
+            .checkout-grid { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <header><h1>💳 Checkout</h1></header>
+
+    <div class="container">
+        <div class="checkout-grid">
+            <!-- PAYMENT FORM -->
+            <div class="payment-section">
+                <h2 class="section-title">Payment Details</h2>
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <div class="radio-group">
+                            <label class="radio-option"><input type="radio" name="payment_method" value="cash" checked> 💵 Cash</label>
+                            <label class="radio-option"><input type="radio" name="payment_method" value="card"> 💳 Credit/Debit Card</label>
+                            <label class="radio-option"><input type="radio" name="payment_method" value="mobile"> 📱 Mobile Payment</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="discount">Discount Amount (P)</label>
+                        <input type="number" id="discount" name="discount"
+                               min="0" max="{{ transaction.subtotal }}" step="0.01"
+                               value="0" oninput="validateDiscount(this); calculateChange()">
+                        <div class="error-text" id="discount-error">Discount cannot be negative or exceed subtotal.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount_paid">Amount Paid (P)</label>
+                        <input type="number" id="amount_paid" name="amount_paid"
+                               step="0.01" min="0" required
+                               oninput="calculateChange()" autofocus>
+                    </div>
+
+                    <div class="amount-display" id="change_display">Change: P0.00</div>
+
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-submit">✓ Complete Sale</button>
+                        <a href="{% url 'active_transactions' %}" class="btn-back">← Back</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ORDER SUMMARY -->
+            <div class="summary-card">
+                <div class="receipt-info">
+                    <div style="color:var(--muted);font-size:.8rem">Receipt #</div>
+                    <div class="receipt-number">{{ transaction.receipt_number }}</div>
+                </div>
+
+                <div class="summary-title">Order Summary</div>
+
+                <div class="summary-row">
+                    <span>Items:</span>
+                    <span class="mono">{{ items.count }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span class="mono" id="subtotal_display">P{{ transaction.subtotal }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (12%):</span>
+                    <span class="mono" id="tax_display">P{{ transaction.tax_amount }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Discount:</span>
+                    <span class="mono" id="discount_display">P0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total Due:</span>
+                    <span class="mono" id="total_due">P{{ transaction.total_amount }}</span>
+                </div>
+
+                <div class="change-display">
+                    <div style="font-size:.85rem;opacity:.85">Change Due</div>
+                    <div class="change-amount" id="change_amount">P0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const TAX_RATE = 0.12;
+    const rawSubtotal = parseFloat('{{ transaction.subtotal }}') || 0;
+
+    function validateDiscount(el) {
+        const val = parseFloat(el.value) || 0;
+        const errEl = document.getElementById('discount-error');
+        if (val < 0) {
+            el.value = 0;
+            errEl.style.display = 'block';
+            setTimeout(() => errEl.style.display = 'none', 2500);
+        } else if (val > rawSubtotal) {
+            el.value = rawSubtotal.toFixed(2);
+            errEl.style.display = 'block';
+            setTimeout(() => errEl.style.display = 'none', 2500);
+        } else {
+            errEl.style.display = 'none';
+        }
+    }
+
+    function calculateChange() {
+        const discount   = Math.max(0, Math.min(parseFloat(document.getElementById('discount').value) || 0, rawSubtotal));
+        const amountPaid = parseFloat(document.getElementById('amount_paid').value) || 0;
+
+        // Subtotal stays fixed from server; tax is constant 12% of subtotal
+        const tax    = rawSubtotal * TAX_RATE;
+        const total  = rawSubtotal - discount + tax;
+        const change = amountPaid - total;
+
+        document.getElementById('subtotal_display').textContent  = 'P' + rawSubtotal.toFixed(2);
+        document.getElementById('tax_display').textContent       = 'P' + tax.toFixed(2);
+        document.getElementById('discount_display').textContent  = 'P' + discount.toFixed(2);
+        document.getElementById('total_due').textContent         = 'P' + total.toFixed(2);
+
+        const changeStr = change >= 0 ? change.toFixed(2) : '0.00';
+        document.getElementById('change_amount').textContent = 'P' + changeStr;
+        document.getElementById('change_display').textContent = 'Change: P' + changeStr;
+    }
+
+    document.addEventListener('DOMContentLoaded', calculateChange);
+    document.getElementById('discount').addEventListener('input', calculateChange);
+    document.getElementById('amount_paid').addEventListener('input', calculateChange);
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+{% extends "store/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="hero">
+    <h1>🍦 Delicious Ice Creams for Everyone!</h1>
+    <p>Freshly made, locally loved — get yours now</p>
+    <button class="btn" onclick="document.getElementById('products').scrollIntoView({behavior: 'smooth'})">
+        Shop Now →
+    </button>
+</section>
+
+<!-- Categories Section -->
+<div class="container">
+    <section class="categories-section">
+        <h2 class="section-title">Our Flavors</h2>
+        <div class="categories-grid">
+            {% for category in categories %}
+            <a href="{% url 'category_products' category.slug %}" class="category-card">
+                <div class="category-icon">
+                    {% if category.icon %}
+                        {{ category.icon|safe }}
+                    {% else %}
+                        🍨
+                    {% endif %}
+                </div>
+                <div class="category-name">{{ category.name }}</div>
+            </a>
+            {% empty %}
+            <p>No categories available yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section id="products">
+        <h2 class="section-title">Featured Treats</h2>
+        <div class="products-container">
+            {% for product in featured_products %}
+            <div class="product-card" data-category="{{ product.category.id }}" data-price="{{ product.price }}">
+                {% if product.image %}
+                    <img data-src="{{ product.image.url }}" alt="{{ product.name }}" class="lazy" width="250" height="200">
+                {% else %}
+                    <div style="background: #f0f0f0; height: 200px; display: flex; align-items: center; justify-content: center;">
+                        🍦 No Image
+                    </div>
+                {% endif %}
+                <div class="featured-badge">⭐ Featured</div>
+                <h3>{{ product.name }}</h3>
+                <p>P{{ product.price }}</p>
+                <a href="{% url 'add_to_cart' product.id %}" class="add-to-cart">
+                    Add to Cart 🛒
+                </a>
+            </div>
+            {% empty %}
+            <p>No products available yet. Add some products in the admin panel.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'store/main.js' %}"></script>
+{% endblock %}

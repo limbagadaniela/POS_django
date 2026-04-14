@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Transactions - POS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --brand: #667eea; --brand-dark: #764ba2;
+            --surface: #fff; --bg: #f4f5fb;
+            --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280;
+            --green: #22c55e; --red: #ef4444;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+        header {
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff; padding: .9rem 1.75rem;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 12px rgba(102,126,234,.3);
+        }
+        header h1 { font-size: 1.25rem; font-weight: 700; }
+        .header-left, .header-right { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+        .btn, .logout-btn {
+            display: inline-flex; align-items: center; padding: .5rem .95rem;
+            background: rgba(255,255,255,.18); color: #fff;
+            text-decoration: none; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,.4); cursor: pointer;
+            font-size: .85rem; font-family: inherit; font-weight: 500;
+            transition: background .2s;
+        }
+        .btn:hover, .logout-btn:hover { background: rgba(255,255,255,.28); }
+        .logout-form { display: inline-block; margin: 0; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+        .sale-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; }
+
+        .items-section {
+            background: var(--surface); border-radius: 16px;
+            padding: 1.75rem; box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        }
+        .section-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table thead { background: var(--bg); }
+        .items-table th {
+            padding: .85rem 1rem; text-align: left; font-weight: 700;
+            border-bottom: 2px solid var(--border); font-size: .88rem; color: var(--muted);
+        }
+        .items-table td { padding: .85rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; }
+        .items-table tbody tr:hover { background: #f7f8fc; }
+
+        .qty-input {
+            width: 64px; padding: .5rem; border: 2px solid var(--border);
+            border-radius: 8px; text-align: center; font-family: 'DM Mono', monospace;
+            font-size: .9rem;
+        }
+        .qty-input:focus { outline: none; border-color: var(--brand); }
+
+        .update-btn, .remove-btn {
+            padding: .45rem .8rem; color: #fff;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: .82rem; font-family: inherit; font-weight: 600;
+            transition: all .2s;
+        }
+        .update-btn { background: var(--brand); }
+        .update-btn:hover { background: var(--brand-dark); }
+        .remove-btn { background: var(--red); }
+        .remove-btn:hover { background: #dc2626; }
+
+        .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+
+        /* Summary card */
+        .summary-card {
+            background: var(--surface); border-radius: 16px;
+            padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.07);
+            position: sticky; top: 1.5rem; height: fit-content;
+        }
+        .receipt-info {
+            background: var(--bg); padding: .85rem 1rem;
+            border-radius: 10px; margin-bottom: 1rem; font-size: .85rem;
+        }
+        .receipt-number { font-weight: 700; color: var(--brand); word-break: break-word; margin-top: .2rem; }
+
+        .summary-row {
+            display: flex; justify-content: space-between;
+            padding: .65rem 0; border-bottom: 1px solid var(--border);
+            font-size: .9rem;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row.total {
+            font-size: 1.1rem; font-weight: 700;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff; padding: .85rem 1rem; border-radius: 10px;
+            margin-top: .75rem;
+        }
+        .mono { font-family: 'DM Mono', monospace; }
+
+        .action-buttons { display: flex; flex-direction: column; gap: .65rem; margin-top: 1.25rem; }
+        .action-buttons a, .action-buttons button {
+            padding: .9rem; border: none; border-radius: 10px; cursor: pointer;
+            font-weight: 700; text-decoration: none; text-align: center;
+            transition: all .2s; font-family: inherit; font-size: .95rem;
+        }
+        .checkout-btn { background: var(--green); color: #fff; }
+        .checkout-btn:hover { background: #16a34a; }
+        .back-btn { background: var(--brand); color: #fff; }
+        .back-btn:hover { background: var(--brand-dark); }
+        .cancel-btn {
+            background: var(--bg); color: var(--text);
+            border: 2px solid var(--border) !important;
+            width: 100%;
+        }
+        .cancel-btn:hover { border-color: var(--red) !important; color: var(--red); }
+
+        @media (max-width: 768px) {
+            .sale-grid { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1>💼 Active Transactions</h1>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'pos_dashboard' %}" class="btn">Dashboard</a>
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="sale-grid">
+            <!-- Items -->
+            <div class="items-section">
+                <h2 class="section-title">Items in Transaction</h2>
+                {% if items %}
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                <tr>
+                                    <td><strong>{{ item.product_name }}</strong></td>
+                                    <td class="mono">P{{ item.product_price }}</td>
+                                    <td>
+                                        <form method="POST" action="{% url 'update_item_quantity' item.id %}" style="display:inline;display:flex;gap:.5rem;align-items:center">
+                                            {% csrf_token %}
+                                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="qty-input">
+                                            <button type="submit" class="update-btn">Update</button>
+                                        </form>
+                                    </td>
+                                    <td class="mono"><strong>P{{ item.line_total }}</strong></td>
+                                    <td>
+                                        <form method="POST" action="{% url 'remove_item' item.id %}" style="display:inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="remove-btn" onclick="return confirm('Remove this item?')">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <p style="font-size:2.5rem;margin-bottom:.75rem">🛒</p>
+                        <p style="font-weight:600">No items in this transaction</p>
+                        <a href="{% url 'pos_dashboard' %}" class="btn" style="margin-top:1rem;display:inline-block;border-color:var(--brand);color:var(--brand);background:var(--bg)">Add Items</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Summary -->
+            <div>
+                <div class="summary-card">
+                    <div class="receipt-info">
+                        <div style="color:var(--muted);font-size:.78rem">Receipt #</div>
+                        <div class="receipt-number">{{ transaction.receipt_number }}</div>
+                    </div>
+
+                    {% if items %}
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span class="mono">P{{ transaction.subtotal }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax (12%):</span>
+                            <span class="mono">P{{ transaction.tax_amount }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount:</span>
+                            <span class="mono">P{{ transaction.discount_amount }}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span class="mono">P{{ transaction.total_amount }}</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="action-buttons">
+                        {% if items %}
+                            <a href="{% url 'checkout' %}" class="checkout-btn">💰 Proceed to Checkout</a>
+                        {% endif %}
+                        <a href="{% url 'pos_dashboard' %}" class="back-btn">← Back to Dashboard</a>
+                        {% if items %}
+                            <form method="POST" action="{% url 'cancel_transaction' %}" style="margin:0">
+                                {% csrf_token %}
+                                <button type="submit" class="cancel-btn" onclick="return confirm('Cancel this entire transaction?')">✕ Cancel Transaction</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

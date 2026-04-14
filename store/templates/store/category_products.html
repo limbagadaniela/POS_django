@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --brand: #667eea; --brand-dark: #764ba2;
+            --surface: #fff; --bg: #f4f5fb;
+            --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280;
+            --green: #22c55e;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff; padding: .9rem 1.75rem;
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 1rem; box-shadow: 0 2px 12px rgba(102,126,234,.3);
+        }
+        .header-left { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+        header h1 { font-size: 1.15rem; font-weight: 700; }
+        .header-center { flex: 1; max-width: 420px; }
+        .search-wrap { position: relative; }
+        .search-wrap input {
+            width: 100%; padding: .6rem 1rem .6rem 2.4rem;
+            border-radius: 10px; border: none;
+            font-size: .9rem; font-family: inherit;
+            background: rgba(255,255,255,.2); color: #fff;
+            outline: none; transition: background .2s;
+        }
+        .search-wrap input::placeholder { color: rgba(255,255,255,.7); }
+        .search-wrap input:focus { background: rgba(255,255,255,.3); }
+        .search-icon {
+            position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+            font-size: .9rem; pointer-events: none;
+        }
+        .header-right { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+        .btn {
+            display: inline-flex; align-items: center;
+            padding: .5rem .95rem; background: rgba(255,255,255,.18); color: #fff;
+            text-decoration: none; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,.4); cursor: pointer;
+            font-size: .85rem; font-family: inherit; font-weight: 500; transition: background .2s;
+        }
+        .btn:hover { background: rgba(255,255,255,.28); }
+
+        .container { max-width: 1440px; margin: 0 auto; padding: 1.5rem 1.75rem; }
+
+        /* MESSAGE */
+        .message-box {
+            padding: .8rem 1rem; border-radius: 10px;
+            background: #fff3cd; color: #856404; border: 1px solid #ffeeba;
+            margin-bottom: 1rem; display: none; font-weight: 500; font-size: .9rem;
+        }
+
+        /* PAGE LAYOUT */
+        .page-layout {
+            display: grid; grid-template-columns: 240px 1fr 320px;
+            gap: 1.25rem; align-items: start;
+        }
+        .panel {
+            background: var(--surface); border-radius: 16px;
+            padding: 1.25rem 1.1rem; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        }
+        .panel-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .panel-title h2 { font-size: 1rem; font-weight: 700; }
+
+        /* CATEGORIES */
+        .category-list {
+            display: flex; flex-direction: column; gap: .5rem;
+            max-height: calc(100vh - 220px); overflow-y: auto;
+        }
+        .category-link {
+            display: block; width: 100%; padding: .75rem 1rem;
+            background: #f7f8fc; border: 1.5px solid var(--border);
+            border-radius: 10px; color: var(--text); text-align: left;
+            font-weight: 600; font-size: .9rem; cursor: pointer; transition: all .2s;
+        }
+        .category-link:hover { background: #eef2ff; border-color: #c3d0ff; }
+        .category-link.active { background: var(--brand); border-color: var(--brand-dark); color: #fff; }
+        .small-btn {
+            padding: .4rem .7rem; font-size: .8rem;
+            background: var(--brand); color: #fff;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
+
+        /* PRODUCT GRID */
+        .product-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: .75rem; max-height: calc(100vh - 220px); overflow-y: auto;
+        }
+        .product-card {
+            background: #f7f8fc; border: 1.5px solid var(--border);
+            border-radius: 12px; overflow: hidden; cursor: pointer;
+            transition: all .2s; display: flex; flex-direction: column;
+        }
+        .product-card:hover { border-color: var(--brand); box-shadow: 0 4px 14px rgba(102,126,234,.18); transform: translateY(-2px); }
+        .product-img { width: 100%; height: 90px; object-fit: cover; background: #e8eaf4; }
+        .product-img-placeholder {
+            width: 100%; height: 90px;
+            background: linear-gradient(135deg, #e8eaf4, #d5d8f0);
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+        }
+        .product-info { padding: .55rem .65rem; flex: 1; }
+        .product-name { font-size: .8rem; font-weight: 600; line-height: 1.3; margin-bottom: .25rem; }
+        .product-price { font-size: .85rem; font-weight: 700; color: var(--brand); font-family: 'DM Mono', monospace; }
+
+        /* BILL */
+        .bill-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .bill-header h2 { font-size: 1.05rem; font-weight: 700; }
+        .bill-header span { color: var(--muted); font-size: .85rem; font-weight: 600; }
+        .bill-table { width: 100%; border-collapse: collapse; }
+        .bill-table thead { border-bottom: 2px solid var(--border); }
+        .bill-table th, .bill-table td { padding: .7rem .6rem; border-bottom: 1px solid var(--border); text-align: left; font-size: .88rem; }
+        .bill-table th { color: var(--muted); font-weight: 600; }
+        .bill-table-wrapper { max-height: calc(100vh - 300px); overflow-y: auto; }
+        .bill-row { cursor: pointer; transition: background .15s; }
+        .bill-row:hover { background: #f7f8fc; }
+        .bill-row.selected { background: #eef2ff; }
+        .empty-bill {
+            min-height: 180px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            gap: .5rem; color: var(--muted); border: 2px dashed var(--border);
+            border-radius: 12px; background: #fafbff; padding: 2rem; margin-top: .5rem; font-size: .9rem;
+        }
+
+        /* SUMMARY */
+        .summary-body { display: flex; flex-direction: column; }
+        .summary-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: .6rem 0; border-bottom: 1px solid var(--border); font-size: .9rem;
+        }
+        .summary-row.total { margin-top: .5rem; font-weight: 700; font-size: 1rem; border-bottom: none; }
+        .summary-row input {
+            width: 90px; padding: .5rem .7rem; border: 1.5px solid var(--border);
+            border-radius: 8px; font-size: .9rem; font-family: 'DM Mono', monospace;
+            text-align: right; cursor: pointer;
+        }
+        .summary-row input.active { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(102,126,234,.15); }
+
+        /* KEYPAD */
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-top: .75rem; }
+        .keypad-key {
+            padding: .8rem; border-radius: 10px; border: 1.5px solid var(--border);
+            background: #fafbff; font-size: 1rem; font-family: 'DM Mono', monospace;
+            cursor: pointer; transition: all .15s;
+        }
+        .keypad-key:hover { background: #eef2ff; border-color: var(--brand); }
+        .checkout-btn {
+            display: block; width: 100%; padding: .9rem; border-radius: 12px; border: none;
+            background: var(--green); color: #fff; font-weight: 700; font-size: .95rem;
+            cursor: pointer; margin-top: .75rem; text-align: center; text-decoration: none;
+            transition: background .2s;
+        }
+        .checkout-btn:hover { background: #16a34a; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 1200px) { .page-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="{% url 'pos_dashboard' %}" class="btn">← Dashboard</a>
+            <h1>Order</h1>
+        </div>
+        <div class="header-center">
+            <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input id="search" type="text" placeholder="Search products…" autocomplete="off">
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="{% url 'active_transactions' %}" class="btn">Active Transactions</a>
+            <form method="post" action="{% url 'logout' %}" style="margin:0">
+                {% csrf_token %}
+                <button type="submit" class="btn">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="message-box" class="message-box"></div>
+
+        <div class="page-layout">
+            <!-- LEFT: Categories / Products -->
+            <aside class="panel">
+                <div id="categories-panel">
+                    <div class="panel-title"><h2>Categories</h2></div>
+                    <div class="category-list">
+                        {% for cat in categories %}
+                            <button type="button" class="category-link{% if cat.slug == category.slug %} active{% endif %}"
+                                data-slug="{{ cat.slug }}" data-name="{{ cat.name }}">{{ cat.name }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="products-panel" class="hidden">
+                    <div class="panel-title">
+                        <h2 id="products-title">Products</h2>
+                        <button type="button" id="back-to-categories" class="small-btn">← Back</button>
+                    </div>
+                    <div class="product-grid" id="product-list"></div>
+                </div>
+            </aside>
+
+            <!-- CENTRE: Bill -->
+            <main class="panel">
+                <div class="bill-header">
+                    <h2>Active Transaction</h2>
+                    <span id="items-count">{{ items|length }} item{{ items|length|pluralize }}</span>
+                </div>
+                <div class="bill-table-wrapper">
+                    <table class="bill-table">
+                        <thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+                        <tbody id="bill-items">
+                            {% for item in items %}
+                                <tr class="bill-row"
+                                    data-item-id="{{ item.id }}"
+                                    data-item-name="{{ item.product_name }}"
+                                    data-item-quantity="{{ item.quantity }}"
+                                    data-item-price="{{ item.product_price }}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.product_name }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>P{{ item.line_total }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-bill{% if items %} hidden{% endif %}" id="empty-bill">
+                    <p><strong>No items yet</strong></p>
+                    <p>Search or pick a category to add items.</p>
+                </div>
+            </main>
+
+            <!-- RIGHT: Summary + Keypad -->
+            <aside class="panel summary-card">
+                <div class="panel-title"><h2>Summary</h2></div>
+                <div class="summary-body">
+                    <div class="summary-row">
+                        <span>Selected:</span>
+                        <strong id="selected-item-name" style="font-size:.85rem;text-align:right;max-width:160px">None</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Quantity:</span>
+                        <input id="quantity-input" type="text" value="1">
+                    </div>
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <strong id="subtotal-value" style="font-family:'DM Mono',monospace">P0.00</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax (12%):</span>
+                        <strong id="tax-value" style="font-family:'DM Mono',monospace">P0.00</strong>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <strong id="total-value" style="font-family:'DM Mono',monospace;color:var(--brand)">P{{ current_transaction.total_amount|default:'0.00' }}</strong>
+                    </div>
+                </div>
+                <div class="keypad" id="keypad">
+                    <button type="button" class="keypad-key" data-key="7">7</button>
+                    <button type="button" class="keypad-key" data-key="8">8</button>
+                    <button type="button" class="keypad-key" data-key="9">9</button>
+                    <button type="button" class="keypad-key" data-key="clear">C</button>
+                    <button type="button" class="keypad-key" data-key="4">4</button>
+                    <button type="button" class="keypad-key" data-key="5">5</button>
+                    <button type="button" class="keypad-key" data-key="6">6</button>
+                    <button type="button" class="keypad-key" data-key="backspace">←</button>
+                    <button type="button" class="keypad-key" data-key="1">1</button>
+                    <button type="button" class="keypad-key" data-key="2">2</button>
+                    <button type="button" class="keypad-key" data-key="3">3</button>
+                    <button type="button" class="keypad-key" data-key=".">.</button>
+                    <button type="button" class="keypad-key" data-key="0" style="grid-column:span 2">0</button>
+                    <button type="button" class="keypad-key" data-key="enter">↵</button>
+                </div>
+                <a href="{% url 'active_transactions' %}" class="checkout-btn">Checkout →</a>
+            </aside>
+        </div>
+    </div>
+
+<script>
+    const TAX_RATE = 0.12;
+    const allProducts = JSON.parse('{{ all_products_json|escapejs }}');
+    const messageBox       = document.getElementById('message-box');
+    const searchInput      = document.getElementById('search');
+    const categoriesPanel  = document.getElementById('categories-panel');
+    const productsPanel    = document.getElementById('products-panel');
+    const productList      = document.getElementById('product-list');
+    const productsTitle    = document.getElementById('products-title');
+    const backButton       = document.getElementById('back-to-categories');
+    const billItems        = document.getElementById('bill-items');
+    const emptyBill        = document.getElementById('empty-bill');
+    const itemsCount       = document.getElementById('items-count');
+    const quantityInput    = document.getElementById('quantity-input');
+    const subtotalValue    = document.getElementById('subtotal-value');
+    const taxValue         = document.getElementById('tax-value');
+    const totalValue       = document.getElementById('total-value');
+    const selectedItemName = document.getElementById('selected-item-name');
+
+    let selectedItemId = null;
+
+    function getCookie(name) {
+        for (let c of document.cookie.split(';')) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+        }
+        return null;
+    }
+    const csrftoken  = getCookie('csrftoken');
+    const addUrlBase = '{% url "add_to_transaction" 0 %}'.replace('/0/', '/');
+
+    function showMessage(text) {
+        messageBox.textContent = text;
+        messageBox.style.display = 'block';
+        setTimeout(() => messageBox.style.display = 'none', 3000);
+    }
+    function fmt(v) { return 'P' + parseFloat(v || 0).toFixed(2); }
+
+    function recalcSummary() {
+        let subtotal = 0;
+        billItems.querySelectorAll('tr').forEach(r => {
+            subtotal += parseFloat(r.children[3]?.textContent.replace('P', '')) || 0;
+        });
+        const tax = subtotal * TAX_RATE;
+        subtotalValue.textContent = fmt(subtotal);
+        taxValue.textContent      = fmt(tax);
+        totalValue.textContent    = fmt(subtotal + tax);
+    }
+
+    function updateBill(items) {
+        if (!items.length) {
+            billItems.innerHTML = '';
+            emptyBill.classList.remove('hidden');
+            selectedItemId = null;
+            selectedItemName.textContent = 'None';
+            quantityInput.value = '1';
+            subtotalValue.textContent = taxValue.textContent = totalValue.textContent = 'P0.00';
+        } else {
+            billItems.innerHTML = items.map((item, i) => `
+                <tr class="bill-row" data-item-id="${item.id}"
+                    data-item-name="${item.product_name}"
+                    data-item-quantity="${item.quantity}"
+                    data-item-price="${parseFloat(item.line_total) / item.quantity}">
+                    <td>${i + 1}</td><td>${item.product_name}</td>
+                    <td>${item.quantity}</td><td>P${parseFloat(item.line_total).toFixed(2)}</td>
+                </tr>`).join('');
+            emptyBill.classList.add('hidden');
+            recalcSummary();
+        }
+        itemsCount.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
+    }
+
+    function renderProducts(products, heading) {
+        productList.innerHTML = products.length
+            ? products.map(p => `
+                <div class="product-card" data-product-id="${p.id}">
+                    ${p.image_url
+                        ? `<img class="product-img" src="${p.image_url}" alt="${p.name}" loading="lazy">`
+                        : `<div class="product-img-placeholder">🍦</div>`}
+                    <div class="product-info">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">P${parseFloat(p.price).toFixed(2)}</div>
+                    </div>
+                </div>`).join('')
+            : `<p style="padding:1rem;color:var(--muted)">No products found</p>`;
+        productsTitle.textContent = heading;
+    }
+
+    function showProductsPanel() {
+        categoriesPanel.classList.add('hidden');
+        productsPanel.classList.remove('hidden');
+    }
+    function showCategoriesPanel() {
+        categoriesPanel.classList.remove('hidden');
+        productsPanel.classList.add('hidden');
+        searchInput.value = '';
+    }
+
+    function addProduct(productId) {
+        fetch(addUrlBase + productId + '/', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ quantity: '1' }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) { updateBill(data.items); showMessage('Added to transaction'); }
+            else showMessage(data.error || 'Could not add product');
+        })
+        .catch(() => showMessage('Unable to add product'));
+    }
+
+    function updateItemQuantity(itemId, quantity) {
+        fetch('{% url "update_item_quantity" 0 %}'.replace('/0/', `/${itemId}/`), {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ quantity }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                updateBill(data.items);
+                if (selectedItemId) {
+                    const sel = document.querySelector(`tr[data-item-id="${selectedItemId}"]`);
+                    if (sel) sel.classList.add('selected');
+                }
+            } else showMessage(data.error || 'Unable to update');
+        })
+        .catch(() => showMessage('Unable to update item quantity'));
+    }
+
+    /* Search */
+    searchInput.addEventListener('input', e => {
+        const q = e.target.value.trim();
+        if (!q) { showCategoriesPanel(); return; }
+        const filtered = allProducts.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+        renderProducts(filtered, filtered.length ? `Results for "${q}"` : 'No results');
+        showProductsPanel();
+    });
+
+    /* Categories */
+    document.querySelectorAll('.category-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+            renderProducts(allProducts.filter(p => p.category_slug === btn.dataset.slug), btn.dataset.name);
+            showProductsPanel();
+        });
+    });
+    backButton.addEventListener('click', showCategoriesPanel);
+
+    /* Product click */
+    productList.addEventListener('click', e => {
+        const card = e.target.closest('.product-card');
+        if (card) addProduct(card.dataset.productId);
+    });
+
+    /* Bill row select */
+    document.body.addEventListener('click', e => {
+        const row = e.target.closest('.bill-row');
+        if (!row?.dataset.itemId) return;
+        selectedItemId = row.dataset.itemId;
+        selectedItemName.textContent = row.dataset.itemName;
+        quantityInput.value = row.dataset.itemQuantity;
+        document.querySelectorAll('.bill-row').forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+        quantityInput.classList.add('active');
+    });
+
+    quantityInput.addEventListener('click', () => { quantityInput.classList.add('active'); quantityInput.value = ''; });
+    quantityInput.addEventListener('keydown', e => e.preventDefault());
+
+    /* Keypad */
+    document.querySelector('.summary-card').addEventListener('click', e => {
+        const key = e.target.dataset.key;
+        if (!key) return;
+        if (key === 'clear') {
+            quantityInput.value = '1'; updateRowInstant('1');
+        } else if (key === 'backspace') {
+            quantityInput.value = quantityInput.value.slice(0, -1) || '1'; updateRowInstant(quantityInput.value);
+        } else if (key === 'enter') {
+            if (selectedItemId) updateItemQuantity(selectedItemId, quantityInput.value);
+        } else if (key !== '.') {
+            const newVal = (quantityInput.value === '1' && key !== '0') ? key : quantityInput.value + key;
+            const num = parseInt(newVal);
+            if (isNaN(num) || num < 1 || num > 1000) return;
+            quantityInput.value = newVal; updateRowInstant(newVal);
+        }
+    });
+
+    function updateRowInstant(val) {
+        if (!selectedItemId) return;
+        const row = document.querySelector(`tr[data-item-id="${selectedItemId}"]`);
+        if (!row) return;
+        const price = parseFloat(row.dataset.itemPrice) || 0;
+        const qty   = parseInt(val) || 1;
+        row.children[2].textContent = qty;
+        row.children[3].textContent = 'P' + (qty * price).toFixed(2);
+        recalcSummary();
+    }
+
+    recalcSummary();
+</script>
+</body>
+</html>
