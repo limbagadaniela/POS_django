@@ -114,11 +114,9 @@ def add_to_transaction(request, product_id):
     transaction_id = request.session.get('current_transaction')
     
     if not transaction_id:
-        # Create new transaction (cashier is None for unauthenticated users)
+        # Create new transaction
         receipt_number = f"RCP-{timezone.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-        cashier = request.user if request.user.is_authenticated else None
         transaction = Transaction.objects.create(
-            cashier=cashier,
             receipt_number=receipt_number,
             status='pending'
         )
@@ -160,7 +158,6 @@ def add_to_transaction(request, product_id):
             'items': items_data,
             'subtotal': str(transaction.subtotal),
             'tax_amount': str(transaction.tax_amount),
-            'discount_amount': str(transaction.discount_amount),
             'total_amount': str(transaction.total_amount),
         })
     
@@ -227,7 +224,6 @@ def update_item_quantity(request, item_id):
             'items': items_data,
             'subtotal': str(transaction.subtotal),
             'tax_amount': str(transaction.tax_amount),
-            'discount_amount': str(transaction.discount_amount),
             'total_amount': str(transaction.total_amount),
         })
     
@@ -261,18 +257,13 @@ def update_transaction_summary(request):
     transaction = get_object_or_404(Transaction, id=transaction_id, status='pending')
     try:
         tax = Decimal(request.POST.get('tax', '0') or '0')
-        discount = Decimal(request.POST.get('discount', '0') or '0')
-        # Validate they're not NaN or Infinity
         if tax.is_nan() or tax.is_infinite():
             tax = Decimal('0')
-        if discount.is_nan() or discount.is_infinite():
-            discount = Decimal('0')
     except InvalidOperation:
         tax = Decimal('0')
-        discount = Decimal('0')
 
     transaction.tax_amount = tax
-    transaction.discount_amount = discount
+    transaction.discount_amount = Decimal('0')
     transaction.calculate_total()
     transaction.save()
 
@@ -280,7 +271,6 @@ def update_transaction_summary(request):
         'success': True,
         'subtotal': str(transaction.subtotal),
         'tax_amount': str(transaction.tax_amount),
-        'discount_amount': str(transaction.discount_amount),
         'total_amount': str(transaction.total_amount),
     })
 
@@ -303,26 +293,21 @@ def checkout(request):
         payment_method = request.POST.get('payment_method', 'cash')
         try:
             amount_paid = Decimal(request.POST.get('amount_paid', '0') or '0')
-            discount = Decimal(request.POST.get('discount', '0') or '0')
-            tax = Decimal(request.POST.get('tax', '0') or '0')
-            # Validate values
-            for val in [amount_paid, discount, tax]:
-                if val.is_nan() or val.is_infinite():
-                    raise InvalidOperation("Invalid decimal value")
+            if amount_paid.is_nan() or amount_paid.is_infinite():
+                raise InvalidOperation("Invalid decimal value")
         except InvalidOperation:
-            messages.error(request, 'Invalid payment amounts')
+            messages.error(request, 'Invalid payment amount')
             return render(request, 'store/checkout.html', {
                 'transaction': transaction,
                 'items': items,
                 'categories': Category.objects.all(),
             })
-        
-        # Update transaction
+
+        # Update transaction — no discount
         transaction.payment_method = payment_method
-        transaction.discount_amount = discount
-        transaction.tax_amount = tax
+        transaction.discount_amount = Decimal('0')
         transaction.calculate_total()
-        
+
         if amount_paid < transaction.total_amount:
             messages.error(request, f'Amount paid (P{amount_paid}) is less than total (P{transaction.total_amount})')
             return render(request, 'store/checkout.html', {
@@ -335,6 +320,12 @@ def checkout(request):
         transaction.change_amount = amount_paid - transaction.total_amount
         transaction.status = 'completed'
         transaction.save()
+
+        # Deduct stock for each item sold
+        for item in transaction.items.all():
+            if item.product:
+                item.product.stock = max(0, item.product.stock - item.quantity)
+                item.product.save()
         
         # Clear session transaction
         if 'current_transaction' in request.session:

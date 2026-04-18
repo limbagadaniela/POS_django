@@ -1,34 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Analytics</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --brand: #667eea; --brand-dark: #764ba2; --surface: #fff; --bg: #f4f5fb; --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280; --green: #22c55e; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
-        header { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #fff; padding: .9rem 1.75rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 12px rgba(102,126,234,.3); }
-        header h1 { font-size: 1.25rem; font-weight: 700; }
-        .btn { display: inline-block; padding: .5rem .95rem; background: rgba(255,255,255,.18); color: #fff; text-decoration: none; border-radius: 8px; border: 1px solid rgba(255,255,255,.4); cursor: pointer; font-size: .85rem; font-family: inherit; transition: background .2s; }
-        .btn:hover { background: rgba(255,255,255,.28); }
-        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
-        .card { background: var(--surface); border-radius: 14px; padding: 1.4rem; box-shadow: 0 2px 10px rgba(0,0,0,.07); overflow-x: auto; }
-        .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 2px solid var(--green); padding-bottom: .5rem; }
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: .8rem 1rem; text-align: left; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--border); background: var(--bg); }
-        td { padding: .8rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; }
-        tbody tr:hover { background: #f7f8fc; }
-        .rank { font-weight: 700; color: var(--muted); font-family: 'DM Mono', monospace; }
-        .rank-1 { color: #f59e0b; }
-        .rank-2 { color: #9ca3af; }
-        .rank-3 { color: #b45309; }
-        .mono { font-family: 'DM Mono', monospace; }
-        .bar-wrap { background: #e8eaf4; border-radius: 4px; height: 8px; min-width: 80px; }
-        .bar { background: linear-gradient(90deg, var(--brand), var(--brand-dark)); height: 8px; border-radius: 4px; }
-        .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
-    </style>
+    <link rel="stylesheet" href="{% static 'store/product_analytics.css' %}">
 </head>
 <body>
     <header>

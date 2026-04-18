@@ -1,123 +1,16 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS Dashboard</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --brand: #667eea; --brand-dark: #764ba2;
-            --surface: #fff; --bg: #f4f5fb;
-            --border: #e8eaf4; --text: #1a1d2e; --muted: #6b7280;
-            --green: #22c55e;
-        }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
-
-        header {
-            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-            color: #fff; padding: .9rem 1.75rem;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 12px rgba(102,126,234,.3);
-        }
-        .header-left { display: flex; align-items: center; gap: .75rem; }
-        header h1 { font-size: 1.25rem; font-weight: 700; }
-        .cashier-info { font-size: .85rem; opacity: .85; }
-        .header-right { display: flex; gap: .65rem; align-items: center; }
-        .btn {
-            display: inline-block; padding: .5rem .95rem;
-            background: rgba(255,255,255,.18); color: #fff;
-            text-decoration: none; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,.4); cursor: pointer;
-            font-size: .85rem; font-family: inherit; transition: background .2s;
-        }
-        .btn:hover { background: rgba(255,255,255,.28); }
-
-        .container { max-width: 1440px; margin: 0 auto; padding: 1.75rem; }
-
-        /* Hero welcome */
-        .welcome {
-            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-            color: #fff; padding: 2rem; border-radius: 16px;
-            text-align: center; margin-bottom: 1.75rem;
-            box-shadow: 0 4px 20px rgba(102,126,234,.25);
-        }
-        .welcome .icon { font-size: 2.5rem; margin-bottom: .5rem; }
-        .welcome h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: .3rem; }
-        .welcome p { opacity: .85; font-size: .95rem; }
-
-        .dashboard-grid {
-            display: grid; grid-template-columns: 1fr 300px;
-            gap: 1.75rem; align-items: start;
-        }
-
-        .main-content {
-            background: var(--surface); border-radius: 16px;
-            padding: 1.75rem; box-shadow: 0 2px 12px rgba(0,0,0,.07);
-        }
-        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; }
-
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 1rem;
-        }
-        .category-btn {
-            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-            color: #fff; border: none; padding: 1.5rem 1rem;
-            border-radius: 14px; cursor: pointer;
-            text-decoration: none; text-align: center;
-            transition: all .25s; font-size: 1rem; font-weight: 600;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            min-height: 120px; gap: .5rem;
-        }
-        .category-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(102,126,234,.35); }
-        .category-icon { font-size: 2rem; }
-
-        /* Sidebar */
-        .sidebar { display: flex; flex-direction: column; gap: 1rem; }
-        .card {
-            background: var(--surface); border-radius: 16px;
-            padding: 1.4rem; box-shadow: 0 2px 12px rgba(0,0,0,.07);
-        }
-        .card h3 { font-size: .95rem; font-weight: 700; color: var(--brand); margin-bottom: .85rem; }
-
-        .status-box {
-            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-            color: #fff; padding: .85rem 1rem; border-radius: 10px;
-            text-align: center; margin-bottom: .65rem;
-        }
-        .status-box h4 { font-size: .78rem; opacity: .85; }
-        .status-box .amount { font-size: 1.4rem; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: .2rem; }
-        .status-box .receipt-no { font-size: .85rem; word-break: break-word; margin-top: .2rem; font-family: 'DM Mono', monospace; }
-
-        .status-total { background: linear-gradient(135deg, #f093fb, #f5576c); }
-
-        .quick-actions { display: flex; flex-direction: column; gap: .5rem; margin-top: .75rem; }
-        .quick-btn {
-            padding: .85rem 1rem; border-radius: 10px;
-            border: 2px solid var(--border); background: var(--surface);
-            cursor: pointer; text-decoration: none; text-align: center;
-            font-weight: 600; font-size: .9rem; color: var(--text);
-            transition: all .2s; font-family: inherit;
-        }
-        .quick-btn:hover { border-color: var(--brand); color: var(--brand); }
-        .quick-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-        .quick-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
-
-        @media (max-width: 768px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .categories-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'store/pos_dashboard.css' %}">
 </head>
 <body>
     <header>
         <div class="header-left">
             <h1>🛒 Dessert System</h1>
-            <div class="cashier-info">{% if user.is_authenticated %}Welcome, <strong>{{ user.username }}</strong>{% endif %}</div>
         </div>
         <div class="header-right">
             {% if user.is_staff %}

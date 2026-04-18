@@ -17,14 +17,14 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ['receipt_number', 'cashier', 'total_amount', 'payment_method', 'status', 'created_at']
+    list_display = ['receipt_number', 'total_amount', 'payment_method', 'status', 'created_at']
     list_filter = ['status', 'payment_method', 'created_at']
-    search_fields = ['receipt_number', 'cashier__username']
+    search_fields = ['receipt_number']
     readonly_fields = ['receipt_number', 'created_at']
-    
+
     fieldsets = (
         ('Receipt Information', {
-            'fields': ('receipt_number', 'cashier', 'created_at')
+            'fields': ('receipt_number', 'created_at')
         }),
         ('Sale Details', {
             'fields': ('subtotal', 'tax_amount', 'discount_amount', 'total_amount')

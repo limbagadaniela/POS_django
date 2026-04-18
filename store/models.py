@@ -1,8 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.text import slugify
 from django.utils import timezone
+from decimal import Decimal
 
 
 class Category(models.Model):
@@ -89,7 +89,6 @@ class Transaction(models.Model):
         ('voided', 'Voided'),
     ]
 
-    cashier = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='transactions')
     receipt_number = models.CharField(max_length=50, unique=True)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax_amount = models.DecimalField(max_digits=10, decimal_places=4, default=0, help_text="Sales tax")
@@ -111,7 +110,8 @@ class Transaction(models.Model):
     def calculate_total(self):
         items_subtotal = sum(item.get_line_total() for item in self.items.all())
         self.subtotal = items_subtotal
-        self.total_amount = self.subtotal - self.discount_amount + self.tax_amount
+        raw_total = self.subtotal - self.discount_amount + self.tax_amount
+        self.total_amount = max(Decimal('0.00'), raw_total)
         return self.total_amount
 
 
