@@ -404,20 +404,33 @@ def cancel_transaction(request):
 # AUTH VIEWS
 # ============================================================================
 
+from django.contrib.auth import authenticate, login
+
 def register_view(request):
     from django.contrib.auth.forms import UserCreationForm
+
     if request.user.is_authenticated:
         return redirect('pos_dashboard')
+
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+
+            # 🔥 authenticate first
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+
             return redirect('pos_dashboard')
     else:
         form = UserCreationForm()
-    return render(request, 'store/register.html', {'form': form})
 
+    return render(request, 'store/register.html', {'form': form})
 
 def custom_login(request):
     """Login view — admin is redirected to admin_dashboard, others to pos_dashboard"""
