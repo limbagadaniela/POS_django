@@ -19,8 +19,24 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.views.static import serve
 
+
+import os
+from django.http import HttpResponse
+
+def debug_media(request):
+    root = str(settings.MEDIA_ROOT)
+    prod = os.path.join(root, 'products')
+    return HttpResponse(
+        f"MEDIA_ROOT: {root}<br>"
+        f"root exists: {os.path.exists(root)}<br>"
+        f"products exists: {os.path.exists(prod)}<br>"
+        f"files: {len(os.listdir(prod)) if os.path.exists(prod) else 0}<br>"
+        f"DEBUG: {settings.DEBUG}"
+    )
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('debug-media/', debug_media),
     path('', include('store.urls')),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
