@@ -23,10 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ve$#(zbwc2dgo(lafm^&6u@ddm4jf*te$i1g^08$8@=$l9u_#p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+import os
 
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 # Application definition
 
@@ -47,6 +52,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = 'media'
 
 MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -125,6 +132,7 @@ USE_TZ = True
 
 STATIC_URL ='/static/'
 STATICFILES_DIRS = [BASE_DIR / 'store' / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
